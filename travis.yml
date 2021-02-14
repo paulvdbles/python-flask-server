@@ -39,3 +39,4 @@ after_success:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - docker tag devopslab2/swagger_server my_docker_reposetory/swagger_server
   - docker push devopslab2/swagger_server
+
