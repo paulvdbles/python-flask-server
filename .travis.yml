@@ -36,6 +36,7 @@ script:
 - docker logs example_api
 - node_modules/.bin/newman run tests/postman_collection.json -e tests/postman_environment.json
 
+
 after_success:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - docker tag devopslab2/swagger_server my_docker_reposetory/swagger_server
