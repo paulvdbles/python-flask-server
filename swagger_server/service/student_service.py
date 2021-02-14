@@ -54,6 +54,7 @@ def delete_student(student_id):
     return student_id
 
 
+
 def get_student_by_last_name(last_name):
     query = Query()
     res = student_db.search(query.last_name == last_name)
