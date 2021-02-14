@@ -25,7 +25,7 @@ def add_student(student):
     if res:
         return 'already exists', 409
 
-    if student.last_name is None:
+    if student.last_name is None or student.first_name is None:
         return 'Last name is required', 405
 
     doc_id = student_db.insert(student.to_dict())
