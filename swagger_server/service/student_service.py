@@ -25,6 +25,9 @@ def add_student(student):
     if res:
         return 'already exists', 409
 
+    if student.last_name is None:
+        return 'Last name is required', 405
+
     doc_id = student_db.insert(student.to_dict())
     student.student_id = doc_id
     return student.student_id
@@ -37,6 +40,10 @@ def get_student_by_id(student_id, subject):
     student = Student.from_dict(student)
     if not subject:
         return student
+    elif subject in student.grades:
+        return student
+    else:
+        return 'already exists', 404
 
 
 def delete_student(student_id):
