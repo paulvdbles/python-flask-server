@@ -1,0 +1,41 @@
+sudo: required 
+services:
+  - docker
+# ref: https://docs.travis-ci.com/user/languages/python
+language: python
+python:
+  - "3.6"
+env:
+  global:
+    - secure: CkZnryhxQUMQ5vS5DikirFSM3m7VfO+k09ix4GCElnwR0QyFv/Ii9q+EFvPmA2SyhvoLssQyzcYCDhKWAn8E0ZZgFMA/uxWWxhUQZ1jIol8FE7qiY0uGZa1R+Ew7Vv+OqLttuAG1zqgZ7DK2wJoD/EdoeFBC/NmWqJxSlDd/9voMt3Y7PIY+z9mwEPVLee6LBULpc08MT+jnZqNckzg2jg5+t2FwLbLH9gg68TQNBw/dV+JCX5otAUkRYeWV0kKEdevRFHb/MRPikaMS9Pk8sz00PNjoWvaZ5E554des/bPC9crgSROXvV5PBtUAkQiXjgJ74jt5oEghi4AQP4E2XL3HwAPper40UEhosMf3F1Oc/JfWVQTYY+k+TPhIotbZmrmxhfAa7t3338pnJPtIXgCozL1Zi7mzlT0LV1rAX9Ovng/7IIOQ657Umei7yWJZmXUtdjPbIpxFSEebtHS+JfWtCenmkBm+jz5NMqatG9kTjlS6LeJKX4sR/3sNUlHJFPlugV/XdTaeq/HSlb0Nk4VoKT2Jr5sFzaWfI1gV0ENvUpQth9pAd9cIkL0eRMmi/ofaFhi4J+HlAponuhaVF4pImZ878Bx3/SSPnl8/l3VYMIgl7uN/ksNz/TNyurCCH8khX4NdZVooOkbS4XxprOLO7sH+zZLyaeZR+IZK8H4=
+    - secure: kAU4Gk2FlumRtuA4xgaVX/AhPinNo9d9KM5OD7Y0VXhVLOwkcSOdXbT89Ea980/lciq370QQegmVQSN0WszMj3FKjW5jWpKc4mSoOO32xe1GKfM94piTbjw9/NkUiQ+WDir9LUFo1BkseUdYi7F/jV8NKmxjBpgh5D25wse+VRRMr5+PgMm26Qc9sKye+oz1phDMhUhQwOnFWnkFv05oAjeBcLAMNyUritwBqIS5B/pMjnlmP7wKWtEiGNEytY1kili4cp7HYCVU+o6TjcNJ74ZxWwAiQoFuXU6otK4nujw1oqhYf41ztWQ2YTKWDRrQynI6/ZYvwHQZrHgY64JFdwL8c2bSrWKbt57FnWmOvHFgVMNzgtUEaV8+1m0Xb0QxKrZsCBu795u4ftmDVaYRXDtLk7b7q1qNGgOa/HIy8ksBeEZRXGaBS7hOLGQc8Engoa2gj2RFmFzIeRZD/3IYuhVk9wgT3+blEjdALw9CIHVPm+TrOltWB+3BNwmVOJ9UoomEq80kKCrp/Ya9Y6ty8lvSPvuYKLL+qvOMu/kXNEYVVbe6M8Oz9Jw0RIc/TzIwKjG7JytqR9FPiQ/ivmINoG2JHnwHa5zFBsfrs446PFCPgXqKuXVPoz/pphgNrSn804AcxZW9fSa7uRjWNX20NUZMhXRJqTsAUB8A7YDRQLw=
+
+before_install:
+  - docker version
+  - docker info
+install:
+    - npm install newman
+    - pip install -r requirements.txt
+    - pip install -r test-requirements.txt
+    - pip install nose
+    - pip install Flask-Testing
+before_script:
+    - node --version
+    - npm --version
+    - node_modules/.bin/newman --version  
+    
+script:
+- python -m unittest discover
+- docker build -t swagger-spring-example:1.0.0 .
+- docker run --name example_api -d -t -p 127.0.0.1:8080:8080 swagger-spring-example:1.0.0
+- docker ps
+- count=0 && until $(curl --output /dev/null --silent --head --fail http://localhost:8080);
+  do printf '.' && sleep 3 && count=$((count+1)) && if [ $count -gt 5 ]; then break;
+  fi; done
+- docker logs example_api
+- node_modules/.bin/newman run tests/postman_collection.json -e tests/postman_environment.json
+
+after_success:
+  - docker login -u $DOCKER_USER -p $DOCKER_PASS
+  - docker tag devopslab2/swagger_server my_docker_reposetory/swagger_server
+  - docker push devopslab2/swagger_server

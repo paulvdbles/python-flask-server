@@ -25,10 +25,23 @@ class TestDefaultController(BaseTestCase):
             method='POST',
             data=json.dumps(body),
             content_type='application/json')
+
+        student_id = (response.json)
+
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
         self.assertTrue(response.is_json)
         self.assertIsInstance(response.json, int)
+
+        ##  Verify student is added
+        response = self.client.open(
+            '/service-api/student/{student_id}'.format(student_id=student_id),
+            method='GET')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+        self.assertTrue(response.is_json)
+        self.assertIsInstance(response.json, dict)
+
 
     def test_delete_student(self):
         """Test case for delete_student
@@ -42,18 +55,21 @@ class TestDefaultController(BaseTestCase):
             method='POST',
             data=json.dumps(body),
             content_type='application/json')
+
         student_id = (response.json)
-        # response = self.client.open(
-        #     '/service-api/student/{student_id}'.format(student_id=student_id),
-        #     method='DELETE')
-        # self.assert200(response,
-        #                'Response body is : ' + response.data.decode('utf-8'))
-        # 
-        # response = self.client.open(
-        #     '/service-api/student/{student_id}'.format(student_id=-1),
-        #     method='DELETE')
-        # self.assert404(response,
-        #                'Response body is : ' + response.data.decode('utf-8'))
+        response = self.client.open(
+            '/service-api/student/{student_id}'.format(student_id=student_id),
+            method='DELETE')
+
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+        # Verify that student is deleted
+        response = self.client.open(
+            '/service-api/student/{student_id}'.format(student_id=student_id),
+            method='GET')
+        self.assert404(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
 
     def test_get_student_by_id(self):
         """Test case for get_student_by_id
